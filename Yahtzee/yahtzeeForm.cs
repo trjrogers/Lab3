@@ -73,13 +73,21 @@ namespace Yahtzee
         // are being scored have to be in the same list 
         public void MoveRollDiceToKeep(List<int> roll, List<int> keep)
         {
+            for (int i = 0; i < dice.Count; i++)
+            {
+                if (dice[i] != -1)
+                {
+                    int index = GetFirstAvailablePB(keep);
+                    keep[index] = dice[i];
+                }
+            }
         }
 
         #region Scoring Methods
         /* This method returns the number of times the parameter value occurs in the list of dice.
          * Calling it with 5 and the following dice 2, 3, 5, 5, 6 returns 2.
          */
-        private int Count(int value, List<int> dice)
+        private int Count(int value, List<int> keep)
         {
             return 0;
         }
@@ -197,9 +205,9 @@ namespace Yahtzee
         /* This method makes it "easy" to call the "right" scoring method when you click on an element
          * in the user score card on the UI.
          */ 
-        private int Score(int whichElement, List<int> dice)
+        private int Score(int whichElement, List<int> keep)
         {
-            int[] counts = GetCounts(dice);
+            int[] counts = GetCounts(keep);
             switch (whichElement)
             {
                 case ONES:
@@ -299,7 +307,12 @@ namespace Yahtzee
 
         public void ShowAllKeepDie()
         {
-
+            for (int i = 0; i < 5; i++)
+            {
+                if (keep[i] != -1) {
+                    ShowKeepDie(i);
+                }
+            } 
         }
 
         private PictureBox GetComputerKeepDie(int i)
@@ -328,6 +341,8 @@ namespace Yahtzee
 
         public void ShowAllComputerKeepDie()
         {
+            for (int i = 0; i < 5; i++)
+                ShowComputerKeepDie(i);
         }
 
         private PictureBox GetRollDie(int i)
@@ -349,10 +364,13 @@ namespace Yahtzee
 
         public void ShowRollDie(int i)
         {
-            
                 PictureBox die = GetRollDie(i);
+            if (dice[i] != -1)
+            {
                 die.Image = Image.FromFile(System.Environment.CurrentDirectory + "\\..\\..\\Dice\\die" + dice[i] + ".png");
                 die.Visible = true;
+            }
+            else die.Visible = false;
         }
 
         public void ShowAllRollDie()
@@ -367,14 +385,12 @@ namespace Yahtzee
         #region Event Handlers
         private void Form1_Load(object sender, EventArgs e)
         {
-            /* reset the user's scorecard
-            * Hide the roll dice
-            * Hide the keep dice
-            * Hide the computer's dice
-            */
+            //hides all dice pb
             HideAllComputerKeepDice();
             HideAllKeepDice();
             HideAllRollDice();
+
+            //keep list full of -1, later used for the FindFirstAvailablePB method
             keep.Insert(0, -1);
             keep.Insert(1, -1);
             keep.Insert(2, -1);
@@ -385,42 +401,119 @@ namespace Yahtzee
 
         private void rollButton_Click(object sender, EventArgs e)
         {
-            // DON'T WORRY ABOUT ROLLING MULTIPLE TIMES UNTIL YOU CAN SCORE ONE ROLL
             // hide all of the keep picture boxes
             HideAllKeepDice();
+            
             // any of the die that were moved back and forth from roll to keep by the user
             // are "collapsed" in the keep data structure
             // show the keep dice again
-            ShowAllKeepDie();
 
-            // clear the roll data structure
+            //clears dice list
             dice.Clear();
+
             // hide all of thhe roll picture boxes
             HideAllRollDice();
-            // roll the right number of dice
-            numDie = dice.Capacity - dice.Count;
+            numDie = 0;
+            
+            //figures out how many dice need re-rolled by looking at number of keep indices with the value -1
+            for (int i = 0; i < keep.Count; i++)
+            {
+                if (keep[i] == -1)
+                {
+                    numDie++;
+                }
+            }
 
-            Roll(numDie, dice);
+            //rolls X number of times based on numDie value
+            for (int i = 0; i < keep.Count; i++)
+            {
+                if (i < numDie)
+                    {
+                    Roll(1, dice);
+                    }
+            }
+
             // show the roll picture boxes
             ShowAllRollDie();
             // increment the number of rolls
             rollCount++;
-            // disable the button if you've rolled 3 times or if there are no dice in roll area
-            if (rollCount == 3 || keep.Count == 5) {
+            //disable the button if you've rolled 3 times or if there are no dice in roll area
+            if (rollCount == 3 || !keep.Contains(-1)) {
                 rollButton.Enabled = false;
             }
-
-            //roll counter
-            foreach (int num in keep)
+            else
             {
-                numDie++;
+                rollButton.Enabled = true;
             }
+
+            //shows keep dice
+            ShowAllKeepDie();
         }
 
         private void userScorecard_DoubleClick(object sender, EventArgs e)
         {
-            // move any rolled die into the keep dice
-            // hide picture boxes for both roll and keep
+            //moves any rolled die into the keep dice
+            MoveRollDiceToKeep(dice, keep);
+            //shows dice in keep area
+            ShowAllKeepDie();
+            //hides dice in roll area
+            HideAllRollDice();
+            //disables dice so they can't be clicked on
+            for (int i = 0; i < keep.Count; i++)
+            {
+                PictureBox die = GetKeepDie(i);
+                die.Enabled = false;
+            }
+
+            Label clicked = (Label)sender;
+            int clickedLabel = int.Parse(clicked.Name.Substring(4));
+
+            switch (clickedLabel)
+            {
+                case 0:
+                    clickedLabel = ONES;
+                    break;
+                case 1:
+                    clickedLabel = TWOS;
+                    break;
+                case 2:
+                    clickedLabel = THREES;
+                    break;
+                case 3:
+                    clickedLabel = FOURS;
+                    break;
+                case 4:
+                    clickedLabel = FIVES;
+                    break;
+                case 5:
+                    clickedLabel = SIXES;
+                    break;
+                case 6:
+                    clickedLabel = THREE_OF_A_KIND;
+                    break;
+                case 7:
+                    clickedLabel = FOUR_OF_A_KIND;
+                    break;
+                case 8:
+                    clickedLabel = FULL_HOUSE;
+                    break;
+                case 9:
+                    clickedLabel = SMALL_STRAIGHT;
+                    break;
+                case 10:
+                    clickedLabel = LARGE_STRAIGHT;
+                    break;
+                case 11:
+                    clickedLabel = CHANCE;
+                    Score(clickedLabel, keep);
+                    break;
+                case 12:
+                    clickedLabel = YAHTZEE;
+                    break;
+            }
+            /*switch (clickedLabel) {
+                case:
+            }*/
 
             // determine which element in the score card was clicked
             // score that element
@@ -442,24 +535,23 @@ namespace Yahtzee
         {
             //declares which pb was clicked
             PictureBox clickedRollDie = (PictureBox)sender;
+            
             //logs which number pb was clicked 0-4
             int rollIndex= int.Parse(clickedRollDie.Name.Substring(4));
             //gets die value of the clicked pb
             int i = dice[rollIndex];
-
+            
             //first available pb in keep area
             int availableKeep = GetFirstAvailablePB(keep);
-
-
             //keep index at availableKeep equal to die value of clicked pb
             keep[availableKeep] = i;
+            
             //reuses i to the first available keep pb
             i = availableKeep;
             //using this method leads to the die image popping up in the keep area
             ShowKeepDie(i);
 
-
-            // clear the die in the roll data structure
+            //-1 for empty indices to note that it is empty
             dice[rollIndex] = -1;
             // hide the picture box
             clickedRollDie.Visible = false;
@@ -467,19 +559,43 @@ namespace Yahtzee
 
         private void keep_DoubleClick(object sender, EventArgs e)
         {
-            // figure out which die you clicked on
+            //declares which pb was clicked
+            PictureBox clickedKeepDie = (PictureBox)sender;
 
-            // figure out where in the set of roll picture boxes there's a "space"
-            // move the roll die value from this die to the roll data structure in the "right place"
-            // sometimes that will be at the end but if the user is moving dice back and forth
-            // it may be in the middle somewhere
+            //logs which number pb was clicked 0-4
+            int keepIndex = int.Parse(clickedKeepDie.Name.Substring(4));
+            //gets die value of clicked pb
+            int j = keep[keepIndex];
 
-            // clear the die in the keep data structure
-            // hide the picture box
+            //finds first available pb in roll area
+            int availableRoll = GetFirstAvailablePB(dice);
+            //roll index at availableKeep equal to die value of clicked pb
+            dice[availableRoll] = j;
+
+            //reuses j to first available roll pb 
+            j = availableRoll;
+            //using this method leads to die image popping up in roll area
+            ShowRollDie(j);
+
+            //hide the picture box
+            clickedKeepDie.Visible = false;
+            keep[keepIndex] = -1;
         }
 
         private void newGameButton_Click(object sender, EventArgs e)
         {
+            HideAllComputerKeepDice();
+            HideAllKeepDice();
+            HideAllRollDice();
+            dice.Clear();
+            keep.Clear();
+            keep.Insert(0, -1);
+            keep.Insert(1, -1);
+            keep.Insert(2, -1);
+            keep.Insert(3, -1);
+            keep.Insert(4, -1);
+            rollCount = 0;
+            rollButton.Enabled = true;
 
         }
         #endregion
