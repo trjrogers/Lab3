@@ -38,17 +38,20 @@ namespace Yahtzee
 
         private int rollCount = 0;
         private int uScoreCardCount = 0;
-        List<int> dice = new List<int>(5);
         private int value;
         private int[] counts = new int[5];
         int howMany;
         int whichValue;
+        Random random = new Random();
 
         // you'll need an instance variable for the user's scorecard - an array of 13 ints
         private int[] scorecard = new int[13];
         // as well as an instance variable for 0 to 5 dice as the user rolls - array or list<int>?
-        private List<int> roll = new List<int>(5);
+        //private List<int> roll = new List<int>(5);
         // as well as an instance variable for 0 to 5 dice that the user wants to keep - array or list<int>? 
+        List<int> dice = new List<int>(5);
+
+
         private List<int> keep = new List<int>(5);
         int numDie;
 
@@ -61,7 +64,6 @@ namespace Yahtzee
 
             for (int i = 0; i < numDie; i++)
             {
-                Random random = new Random();
                 int rnd = random.Next(1, 7);
                 dice.Add(rnd);
             }
@@ -265,9 +267,9 @@ namespace Yahtzee
 
         /* When I move a die from roll to keep, I need to know which pb I can use.  It's the first spot with a -1 in it
          */
-        public int GetFirstAvailablePB(List<int> dice)
+        public int GetFirstAvailablePB(List<int> keep)
         {
-            return dice.IndexOf(-1);
+            return keep.IndexOf(-1);
         }
 
         #region UI Dice Methods
@@ -291,7 +293,7 @@ namespace Yahtzee
         public void ShowKeepDie(int i)
         {
             PictureBox die = GetKeepDie(i);
-            //die.Image = Image.FromFile(System.Environment.CurrentDirectory + "\\..\\..\\Dice\\die" + keep[i] + ".png");
+            die.Image = Image.FromFile(System.Environment.CurrentDirectory + "\\..\\..\\Dice\\die" + keep[i] + ".png");
             die.Visible = true;
         }
 
@@ -373,6 +375,11 @@ namespace Yahtzee
             HideAllComputerKeepDice();
             HideAllKeepDice();
             HideAllRollDice();
+            keep.Insert(0, -1);
+            keep.Insert(1, -1);
+            keep.Insert(2, -1);
+            keep.Insert(3, -1);
+            keep.Insert(4, -1);
 
         }
 
@@ -386,27 +393,28 @@ namespace Yahtzee
             // show the keep dice again
             ShowAllKeepDie();
 
-            // START HERE
             // clear the roll data structure
             dice.Clear();
             // hide all of thhe roll picture boxes
             HideAllRollDice();
             // roll the right number of dice
-            numDie = (5 - dice.Count);
+            numDie = dice.Capacity - dice.Count;
 
             Roll(numDie, dice);
             // show the roll picture boxes
             ShowAllRollDie();
             // increment the number of rolls
             rollCount++;
-            // disable the button if you've rolled 3 times
-            /*if (rollCount == 3) {
+            // disable the button if you've rolled 3 times or if there are no dice in roll area
+            if (rollCount == 3 || keep.Count == 5) {
                 rollButton.Enabled = false;
             }
+
+            //roll counter
             foreach (int num in keep)
             {
                 numDie++;
-            }*/
+            }
         }
 
         private void userScorecard_DoubleClick(object sender, EventArgs e)
@@ -432,15 +440,29 @@ namespace Yahtzee
 
         private void roll_DoubleClick(object sender, EventArgs e)
         {
-            // figure out which die you clicked on
+            //declares which pb was clicked
+            PictureBox clickedRollDie = (PictureBox)sender;
+            //logs which number pb was clicked 0-4
+            int rollIndex= int.Parse(clickedRollDie.Name.Substring(4));
+            //gets die value of the clicked pb
+            int i = dice[rollIndex];
 
-            // figure out where in the set of keep picture boxes there's a "space"
-            // move the roll die value from this die to the keep data structure in the "right place"
-            // sometimes that will be at the end but if the user is moving dice back and forth
-            // it may be in the middle somewhere
+            //first available pb in keep area
+            int availableKeep = GetFirstAvailablePB(keep);
+
+
+            //keep index at availableKeep equal to die value of clicked pb
+            keep[availableKeep] = i;
+            //reuses i to the first available keep pb
+            i = availableKeep;
+            //using this method leads to the die image popping up in the keep area
+            ShowKeepDie(i);
+
 
             // clear the die in the roll data structure
+            dice[rollIndex] = -1;
             // hide the picture box
+            clickedRollDie.Visible = false;
         }
 
         private void keep_DoubleClick(object sender, EventArgs e)
