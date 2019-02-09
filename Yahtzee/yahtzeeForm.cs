@@ -38,7 +38,7 @@ namespace Yahtzee
 
         private int rollCount = 0;
         private int uScoreCardCount = 0;
-        private List<int> dice = new List<int>(5);
+        List<int> dice = new List<int>(5);
         private int value;
         private int[] counts = new int[5];
         int howMany;
@@ -64,7 +64,6 @@ namespace Yahtzee
                 Random random = new Random();
                 int rnd = random.Next(1, 7);
                 dice.Add(rnd);
-                return;
             }
         }
 
@@ -348,16 +347,17 @@ namespace Yahtzee
 
         public void ShowRollDie(int i)
         {
-            PictureBox die = GetRollDie(i);
-            //die.Image = Image.FromFile(System.Environment.CurrentDirectory + "\\..\\..\\Dice\\die" + roll[i] + ".png");
-            die.Visible = true;
+            
+                PictureBox die = GetRollDie(i);
+                die.Image = Image.FromFile(System.Environment.CurrentDirectory + "\\..\\..\\Dice\\die" + dice[i] + ".png");
+                die.Visible = true;
         }
 
         public void ShowAllRollDie()
         {
-            foreach (int die in dice)
+            for (int i = 0; i < numDie; i++)
             {
-                ShowRollDie(die);
+                ShowRollDie(i);
             }
         }
         #endregion
@@ -388,24 +388,25 @@ namespace Yahtzee
 
             // START HERE
             // clear the roll data structure
-            roll.Clear();
+            dice.Clear();
             // hide all of thhe roll picture boxes
             HideAllRollDice();
             // roll the right number of dice
-            numDie = (5 - roll.Count);
+            numDie = (5 - dice.Count);
+
             Roll(numDie, dice);
             // show the roll picture boxes
             ShowAllRollDie();
             // increment the number of rolls
             rollCount++;
             // disable the button if you've rolled 3 times
-            if (rollCount == 3) {
+            /*if (rollCount == 3) {
                 rollButton.Enabled = false;
             }
             foreach (int num in keep)
             {
                 numDie++;
-            }
+            }*/
         }
 
         private void userScorecard_DoubleClick(object sender, EventArgs e)
