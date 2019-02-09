@@ -38,10 +38,19 @@ namespace Yahtzee
 
         private int rollCount = 0;
         private int uScoreCardCount = 0;
+        private List<int> dice = new List<int>(5);
+        private int value;
+        private int[] counts = new int[5];
+        int howMany;
+        int whichValue;
 
         // you'll need an instance variable for the user's scorecard - an array of 13 ints
+        private int[] scorecard = new int[13];
         // as well as an instance variable for 0 to 5 dice as the user rolls - array or list<int>?
+        private List<int> roll = new List<int>(5);
         // as well as an instance variable for 0 to 5 dice that the user wants to keep - array or list<int>? 
+        private List<int> keep = new List<int>(5);
+        int numDie;
 
         // this is the list of methods that I used
 
@@ -49,6 +58,14 @@ namespace Yahtzee
         // This method rolls numDie and puts the results in the list
         public void Roll(int numDie, List<int> dice)
         {
+
+            for (int i = 0; i < numDie; i++)
+            {
+                Random random = new Random();
+                int rnd = random.Next(1, 7);
+                dice.Add(rnd);
+                return;
+            }
         }
 
         // This method moves all of the rolled dice to the keep dice before scoring.  All of the dice that
@@ -338,37 +355,57 @@ namespace Yahtzee
 
         public void ShowAllRollDie()
         {
-
+            foreach (int die in dice)
+            {
+                ShowRollDie(die);
+            }
         }
         #endregion
 
         #region Event Handlers
         private void Form1_Load(object sender, EventArgs e)
         {
-             /* reset the user's scorecard
-             * Hide the roll dice
-             * Hide the keep dice
-             * Hide the computer's dice
-             */ 
+            /* reset the user's scorecard
+            * Hide the roll dice
+            * Hide the keep dice
+            * Hide the computer's dice
+            */
+            HideAllComputerKeepDice();
+            HideAllKeepDice();
+            HideAllRollDice();
+
         }
 
         private void rollButton_Click(object sender, EventArgs e)
         {
             // DON'T WORRY ABOUT ROLLING MULTIPLE TIMES UNTIL YOU CAN SCORE ONE ROLL
             // hide all of the keep picture boxes
+            HideAllKeepDice();
             // any of the die that were moved back and forth from roll to keep by the user
             // are "collapsed" in the keep data structure
             // show the keep dice again
+            ShowAllKeepDie();
 
             // START HERE
             // clear the roll data structure
+            roll.Clear();
             // hide all of thhe roll picture boxes
-
+            HideAllRollDice();
             // roll the right number of dice
+            numDie = (5 - roll.Count);
+            Roll(numDie, dice);
             // show the roll picture boxes
-
+            ShowAllRollDie();
             // increment the number of rolls
+            rollCount++;
             // disable the button if you've rolled 3 times
+            if (rollCount == 3) {
+                rollButton.Enabled = false;
+            }
+            foreach (int num in keep)
+            {
+                numDie++;
+            }
         }
 
         private void userScorecard_DoubleClick(object sender, EventArgs e)
