@@ -42,6 +42,7 @@ namespace Yahtzee
         private int[] counts = new int[5];
         int howMany;
         int whichValue;
+        string EMPTY = "";
         Random random = new Random();
 
         // you'll need an instance variable for the user's scorecard - an array of 13 ints
@@ -87,9 +88,16 @@ namespace Yahtzee
         /* This method returns the number of times the parameter value occurs in the list of dice.
          * Calling it with 5 and the following dice 2, 3, 5, 5, 6 returns 2.
          */
-        private int Count(int value, List<int> keep)
+        private int Count(int value, List<int> counts)
         {
-            return 0;
+            int k = 0;
+            for (int i = 0; i < keep.Count; i++)
+            {
+                if (keep[i] == value) {
+                    k++;
+                }
+            }
+            return k;
         }
 
         /* This method counts how many 1s, 2s, 3s ... 6s there are in a list of ints that represent a set of dice
@@ -99,41 +107,47 @@ namespace Yahtzee
          * It returns the array of counts.
          * All of the rest of the scoring methods can be "easily" calculated using the array of counts.
          */
-        private int[] GetCounts(List<int> dice)
+        private int[] GetCounts(List<int> keep)
         {
-            return null;
+            int[] counts = new int[6];
+            for (int i = 0; i <= keep.Count; i++)
+            {
+                int value = (i + 1);
+                counts[i] = Count(value, keep);     
+            }
+            return counts;
         }
 
         /* Each of these methods takes the array of counts as a parameter and returns the score for a dice value.
          */
         private int ScoreOnes(int[] counts)
         {
-            return 0;
+            return counts[0];
         }
 
         private int ScoreTwos(int[] counts)
         {
-            return 0;
+            return counts[1];
         }
 
         private int ScoreThrees(int[] counts)
         {
-            return 0;
+            return counts[2];
         }
 
         private int ScoreFours(int[] counts)
         {
-            return 0;
+            return counts[3];
         }
 
         private int ScoreFives(int[] counts)
         {
-            return 0;
+            return counts[4];
         }
 
         private int ScoreSixes(int[] counts)
         {
-            return 0;
+            return counts[5];
         }
 
         /* This method can be used to determine if you have 3 of a kind (or 4? or  5?).  The output parameter
@@ -207,7 +221,8 @@ namespace Yahtzee
          */ 
         private int Score(int whichElement, List<int> keep)
         {
-            int[] counts = GetCounts(keep);
+            int[] counts = new int[6];
+            counts = GetCounts(keep);
             switch (whichElement)
             {
                 case ONES:
@@ -307,7 +322,7 @@ namespace Yahtzee
 
         public void ShowAllKeepDie()
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < keep.Count; i++)
             {
                 if (keep[i] != -1) {
                     ShowKeepDie(i);
@@ -403,18 +418,20 @@ namespace Yahtzee
         {
             // hide all of the keep picture boxes
             HideAllKeepDice();
-            
-            // any of the die that were moved back and forth from roll to keep by the user
-            // are "collapsed" in the keep data structure
-            // show the keep dice again
-
             //clears dice list
             dice.Clear();
-
             // hide all of thhe roll picture boxes
             HideAllRollDice();
             numDie = 0;
-            
+            //reenables empty score card items
+            foreach (var l in new Label[] { user0, user1, user2, user3, user4, user5, user6, user7, user8, user9, user10, user11, user12 })
+            {
+                if (l.Text == EMPTY)
+                {
+                    l.Enabled = true;
+                }
+            }
+
             //figures out how many dice need re-rolled by looking at number of keep indices with the value -1
             for (int i = 0; i < keep.Count; i++)
             {
@@ -468,25 +485,32 @@ namespace Yahtzee
             Label clicked = (Label)sender;
             int clickedLabel = int.Parse(clicked.Name.Substring(4));
 
+            
             switch (clickedLabel)
             {
                 case 0:
                     clickedLabel = ONES;
+                    user0.Text = ((Score(ONES, keep) * 1)).ToString();
                     break;
                 case 1:
                     clickedLabel = TWOS;
+                    user1.Text = ((Score(TWOS, keep) * 2)).ToString();
                     break;
                 case 2:
                     clickedLabel = THREES;
+                    user2.Text = ((Score(THREES, keep) * 3)).ToString();
                     break;
                 case 3:
                     clickedLabel = FOURS;
+                    user3.Text = ((Score(FOURS, keep) * 4)).ToString();
                     break;
                 case 4:
                     clickedLabel = FIVES;
+                    user4.Text = ((Score(FIVES, keep) * 5)).ToString();
                     break;
                 case 5:
                     clickedLabel = SIXES;
+                    user5.Text = ((Score(SIXES, keep) * 6)).ToString();
                     break;
                 case 6:
                     clickedLabel = THREE_OF_A_KIND;
@@ -510,6 +534,29 @@ namespace Yahtzee
                 case 12:
                     clickedLabel = YAHTZEE;
                     break;
+            }
+
+            foreach(var l in new Label[] { user0, user1, user2, user3, user4, user5, user6, user7, user8, user9, user10, user11, user12})
+            {
+                l.Enabled = false;
+            }
+
+            keep.Clear();
+
+            if (clicked.Text == "0")
+            {
+                clicked.Enabled = true;
+                clicked.Text = "";
+            }
+            else if (clicked.Text != "0")
+            {
+                rollCount = 0;
+                dice.Clear();
+                for (int i = 0; i < keep.Count; i++)
+                {
+                    keep[i] = -1;
+                }
+                rollButton.Enabled = true;
             }
             /*switch (clickedLabel) {
                 case:
