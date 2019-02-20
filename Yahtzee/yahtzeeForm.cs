@@ -44,6 +44,7 @@ namespace Yahtzee
         int whichValue;
         string EMPTY = "";
         Random random = new Random();
+        bool turnOver;
 
         // you'll need an instance variable for the user's scorecard - an array of 13 ints
         private int[] scorecard = new int[13];
@@ -88,6 +89,9 @@ namespace Yahtzee
         /* This method returns the number of times the parameter value occurs in the list of dice.
          * Calling it with 5 and the following dice 2, 3, 5, 5, 6 returns 2.
          */
+         
+            
+            //for some reason, this is where counts is getting overridden to 6 indices
         private int Count(int value, List<int> counts)
         {
             int k = 0;
@@ -109,6 +113,7 @@ namespace Yahtzee
          */
         private int[] GetCounts(List<int> keep)
         {
+            //counts still 6 at this point
             int[] counts = new int[6];
             for (int i = 0; i <= keep.Count; i++)
             {
@@ -221,6 +226,7 @@ namespace Yahtzee
          */ 
         private int Score(int whichElement, List<int> keep)
         {
+            //counts is 6 ind at this point
             int[] counts = new int[6];
             counts = GetCounts(keep);
             switch (whichElement)
@@ -390,7 +396,7 @@ namespace Yahtzee
 
         public void ShowAllRollDie()
         {
-            for (int i = 0; i < numDie; i++)
+            for (int i = 0; i < dice.Count; i++)
             {
                 ShowRollDie(i);
             }
@@ -418,11 +424,19 @@ namespace Yahtzee
         {
             // hide all of the keep picture boxes
             HideAllKeepDice();
+            
             //clears dice list
-            dice.Clear();
+
             // hide all of thhe roll picture boxes
             HideAllRollDice();
             numDie = 0;
+
+            for (int i = 0; i < keep.Count; i++)
+            {
+                PictureBox die = GetKeepDie(i);
+                die.Enabled = true;
+            }
+
             //reenables empty score card items
             foreach (var l in new Label[] { user0, user1, user2, user3, user4, user5, user6, user7, user8, user9, user10, user11, user12 })
             {
@@ -432,39 +446,126 @@ namespace Yahtzee
                 }
             }
 
-            //figures out how many dice need re-rolled by looking at number of keep indices with the value -1
-            for (int i = 0; i < keep.Count; i++)
+            //logic for new-turn rolls
+            #region
+            if (turnOver == true)
             {
-                if (keep[i] == -1)
+                rollCount = 0;
+
+                keep.Insert(0, -1);
+                keep.Insert(1, -1);
+                keep.Insert(2, -1);
+                keep.Insert(3, -1);
+                keep.Insert(4, -1);
+
+                rollButton.Enabled = true;
+                //figures out how many dice need re-rolled by looking at number of keep indices with the value -1
+                for (int i = 0; i < 5; i++)
                 {
-                    numDie++;
-                }
-            }
-
-            //rolls X number of times based on numDie value
-            for (int i = 0; i < keep.Count; i++)
-            {
-                if (i < numDie)
+                    if (keep[i] == -1)
                     {
-                    Roll(1, dice);
+                        numDie++;
                     }
-            }
+                }
 
-            // show the roll picture boxes
-            ShowAllRollDie();
-            // increment the number of rolls
-            rollCount++;
-            //disable the button if you've rolled 3 times or if there are no dice in roll area
-            if (rollCount == 3 || !keep.Contains(-1)) {
-                rollButton.Enabled = false;
+                int numEmpty = (5 - numDie);
+                dice.Clear();
+
+                //rolls X number of times based on numDie value
+                for (int i = 0; i < keep.Count; i++)
+                {
+                    if (i < numDie)
+                    {
+                        Roll(1, dice);
+                    }
+                }
+
+                for (int i = 0; i < numEmpty; i++)
+                {
+                    dice.Add(-1);
+                }
+
+                // show the roll picture boxes
+                ShowAllRollDie();
+                // increment the number of rolls
+                rollCount++;
+
+                for (int i = 0; i < keep.Count; i++)
+                {
+                    PictureBox die = GetKeepDie(i);
+                    die.Enabled = true;
+                }
+
+                //disable the button if you've rolled 3 times or if there are no dice in roll area
+                if (rollCount == 3 || !keep.Contains(-1))
+                {
+                    rollButton.Enabled = false;
+                }
+                else
+                {
+                    rollButton.Enabled = true;
+                }
+
+                //shows keep dice
+                ShowAllKeepDie();
+                turnOver = false;
             }
+            #endregion
+            // logic for non-new-turn  rolls
+            #region
             else
             {
-                rollButton.Enabled = true;
-            }
+                //figures out how many dice need re-rolled by looking at number of keep indices with the value -1
+                for (int i = 0; i < 5; i++)
+                {
+                    if (keep[i] == -1)
+                    {
+                        numDie++;
+                    }
+                }
 
-            //shows keep dice
-            ShowAllKeepDie();
+                int numEmpty = (5 - numDie);
+                dice.Clear();
+
+                //rolls X number of times based on numDie value
+                for (int i = 0; i < keep.Count; i++)
+                {
+                    if (i < numDie)
+                    {
+                        Roll(1, dice);
+                    }
+                }
+
+                for (int i = 0; i < numEmpty; i++)
+                {
+                    dice.Add(-1);
+                }
+
+                // show the roll picture boxes
+                ShowAllRollDie();
+                // increment the number of rolls
+                rollCount++;
+                //disable the button if you've rolled 3 times or if there are no dice in roll area
+                if (rollCount == 3 || !keep.Contains(-1))
+                {
+                    rollButton.Enabled = false;
+                }
+                else
+                {
+                    rollButton.Enabled = true;
+                }
+
+                //shows keep dice
+                ShowAllKeepDie();
+                turnOver = false;
+
+                for (int i = 0; i < keep.Count; i++)
+                {
+                    PictureBox die = GetKeepDie(i);
+                    die.Enabled = true;
+                }
+            }
+            #endregion
         }
 
         private void userScorecard_DoubleClick(object sender, EventArgs e)
@@ -547,6 +648,11 @@ namespace Yahtzee
             {
                 clicked.Enabled = true;
                 clicked.Text = "";
+                for (int i = 0; i < keep.Count; i++)
+                {
+                    PictureBox die = GetKeepDie(i);
+                    die.Enabled = false;
+                }
             }
             else if (clicked.Text != "0")
             {
@@ -557,7 +663,9 @@ namespace Yahtzee
                     keep[i] = -1;
                 }
                 rollButton.Enabled = true;
+                turnOver = true;
             }
+
             /*switch (clickedLabel) {
                 case:
             }*/
