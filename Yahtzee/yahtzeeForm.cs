@@ -39,23 +39,30 @@ namespace Yahtzee
         private int rollCount = 0;
         private int uScoreCardCount = 0;
         private int value;
+
+        private int[] scoreCard = new int[13];
+
+        // holds the number of dice need to be rolled when roll button is clicked
+        private int numDie;
+        // array that holds the count of each die value in player's "hand"
         private int[] counts = new int[5];
-        int howMany;
+        
+        private int howMany;
         int whichValue;
         string EMPTY = "";
+
+        // random class constructor
         Random random = new Random();
+        // holds boolean value of whether or not the player's turn has ended or if they can keep rolling
         bool turnOver;
 
         // you'll need an instance variable for the user's scorecard - an array of 13 ints
         private int[] scorecard = new int[13];
         // as well as an instance variable for 0 to 5 dice as the user rolls - array or list<int>?
-        //private List<int> roll = new List<int>(5);
-        // as well as an instance variable for 0 to 5 dice that the user wants to keep - array or list<int>? 
         List<int> dice = new List<int>(5);
-
-
+        // as well as an instance variable for 0 to 5 dice that the user wants to keep - array or list<int>? 
         private List<int> keep = new List<int>(5);
-        int numDie;
+
 
         // this is the list of methods that I used
 
@@ -89,19 +96,16 @@ namespace Yahtzee
         /* This method returns the number of times the parameter value occurs in the list of dice.
          * Calling it with 5 and the following dice 2, 3, 5, 5, 6 returns 2.
          */
-         
-            
-            //for some reason, this is where counts is getting overridden to 6 indices
         private int Count(int value, List<int> counts)
         {
-            int k = 0;
+            int count = 0;
             for (int i = 0; i < keep.Count; i++)
             {
                 if (keep[i] == value) {
-                    k++;
+                    count++;
                 }
             }
-            return k;
+            return count;
         }
 
         /* This method counts how many 1s, 2s, 3s ... 6s there are in a list of ints that represent a set of dice
@@ -160,17 +164,29 @@ namespace Yahtzee
          */ 
         private bool HasCount(int howMany, int[] counts, out int whichValue)
         {
-            int index = ONES;
+            /*int index = ONES;
             foreach (int count in counts)
             {
                 if (howMany == count)
                 {
-                    whichValue = index;
+                    whichValue = count;
                     return true;
                 }
             }
             whichValue = NONE;
-            return false;
+            return false;*/
+
+            int j = 0;
+            for (int i = 0; i < counts.Length; i++)
+            {
+                if (counts[i] == howMany)
+                {
+                    j = i + 1;
+                }
+            }
+
+            whichValue = j;
+            return true;
         }
 
         /* This method returns the sum of the dice represented in the counts array.
@@ -178,24 +194,55 @@ namespace Yahtzee
          */ 
         private int Sum(int[] counts)
         {
-            return 0;
+            int sum = 0;
+
+            for (int i = 0; i < counts.Length; i++)
+            {
+                int x = (counts[i] * (i + 1));
+                sum = sum + x;
+            }
+            return sum;
         }
 
         /* This method calls HasCount(3...) and if there are 3 of a kind calls Sum to calculate the score.
          */ 
         private int ScoreThreeOfAKind(int[] counts)
         {
-            return 0;
+            /*int score;
+            HasCount(3, counts, out int whichValue);
+            score = counts[whichValue] * 3;
+            return score;*/
+
+            int score = 0;
+            if (HasCount(3, counts, out int whichValue))
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    score = score + (counts[i] * (i + 1));
+                }
+            }
+            return score;
         }
 
         private int ScoreFourOfAKind(int[] counts)
         {
-            return 0;
+            int score = 0;
+            if (HasCount(4, counts, out int whichValue))
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    score = score + (counts[i] * (i + 1));
+                }
+            }
+            return score;
         }
 
         private int ScoreYahtzee(int[] counts)
         {
-            return 0;
+            int score;
+            HasCount(5, counts, out int whichValue);
+            score = whichValue * 5;
+            return score;
         }
 
         /* This method calls HasCount(2 and HasCount(3 to determine if there's a full house.  It calls sum to 
@@ -203,22 +250,168 @@ namespace Yahtzee
          */ 
         private int ScoreFullHouse(int[] counts)
         {
-            return 0;
+            if (HasCount(3, counts, out int whichValue) == true && HasCount(2, counts, out int whichValue2) == true)
+            {
+                return 25;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         private int ScoreSmallStraight(int[] counts)
         {
-            return 0;
+            bool small = false;
+
+            if (counts[0] >= 1)
+            {
+                if (counts[1] >= 1)
+                {
+                    if (counts[2] >= 1)
+                    {
+                        if (counts[3] >= 1)
+                        {
+                            small = true;
+                        }
+                        else
+                        {
+                            small = false;
+                        }
+                    }
+                }
+            }
+            else if (counts[0] < 1)
+            {
+                if (counts[1] >= 1)
+                {
+                    if (counts[2] >= 1)
+                    {
+                        if (counts[3] >= 1)
+                        {
+                            if (counts[4] >= 1)
+                            {
+                                small = true;
+                            }
+                        }
+                    }
+                }
+                else if (counts[1] < 1)
+                {
+                    if (counts[2] >= 1)
+                    {
+                        if (counts[3] >= 1)
+                        {
+                            if (counts[4] >= 1)
+                            {
+                                if (counts[5] >= 1)
+                                {
+                                    small = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                small = false;
+            }
+
+            if (small == true)
+            {
+                return 30;
+            }
+            else
+            {
+                return 0;
+            }
+
         }
 
         private int ScoreLargeStraight(int[] counts)
-        {   
-            return 0;
+        {
+            bool large = false;
+
+            if (counts[0] == 1)
+            {
+                if (counts[1] == 1)
+                {
+                    if (counts[2] == 1)
+                    {
+                        if (counts[3] == 1)
+                        {
+                            if (counts[4] == 1)
+                            {
+                                large = true;
+                            }
+                            else
+                            {
+                                large = false;
+                            }
+                        }
+                        else
+                        {
+                            large = false;
+                        }
+                    }
+                    else
+                    {
+                        large = false;
+                    }
+                }
+                else
+                {
+                    large = false;
+                }
+            }
+            else if (counts[1] == 1)
+            {
+                if (counts[2] == 1)
+                {
+                    if (counts[3] == 1)
+                    {
+                        if (counts[4] == 1)
+                        {
+                            if (counts[5] == 1)
+                            {
+                                large = true;
+                            }
+                            else
+                            {
+                                large = false;
+                            }
+                        }
+                        else
+                        {
+                            large = false;
+                        }
+                    }
+                    else
+                    {
+                        large = false;
+                    }
+                }
+                else
+                {
+                    large = false;
+                }
+            }
+
+            if (large == true)
+            {
+                return 40;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         private int ScoreChance(int[] counts)
         {
-            return 0;
+            int chance = Sum(counts);
+            return chance;
         }
 
         /* This method makes it "easy" to call the "right" scoring method when you click on an element
@@ -266,7 +459,8 @@ namespace Yahtzee
         // set each value to some negative number because 
         // a 0 or a positive number could be an actual score
         private void ResetScoreCard(int[] scoreCard, int scoreCardCount)
-        {
+        {  
+
         }
 
         // this set has to do with user's scorecard UI
@@ -418,6 +612,11 @@ namespace Yahtzee
             keep.Insert(3, -1);
             keep.Insert(4, -1);
 
+            for (int i = 0; i < 13; i++)
+            {
+                scoreCard[i] = -1;
+            }
+
         }
 
         private void rollButton_Click(object sender, EventArgs e)
@@ -451,7 +650,7 @@ namespace Yahtzee
             if (turnOver == true)
             {
                 rollCount = 0;
-
+                keep.Clear();
                 keep.Insert(0, -1);
                 keep.Insert(1, -1);
                 keep.Insert(2, -1);
@@ -583,67 +782,108 @@ namespace Yahtzee
                 die.Enabled = false;
             }
 
+            // determine which element in the score card was clicked
             Label clicked = (Label)sender;
             int clickedLabel = int.Parse(clicked.Name.Substring(4));
 
-            
+            int[] counts = GetCounts(keep);
+
+
+            // score that element
             switch (clickedLabel)
             {
                 case 0:
                     clickedLabel = ONES;
-                    user0.Text = ((Score(ONES, keep) * 1)).ToString();
+                    // score that element
+                    scoreCard[0] = (Score(ONES, keep));
+                    // put the score in the scorecard and the UI
+                    user0.Text = (scoreCard[0].ToString());
+                    uScoreCardCount++;
                     break;
                 case 1:
                     clickedLabel = TWOS;
-                    user1.Text = ((Score(TWOS, keep) * 2)).ToString();
+                    scoreCard[1] = (Score(TWOS, keep) * 2);
+                    user1.Text = (scoreCard[1]).ToString();
+                    uScoreCardCount++;
                     break;
                 case 2:
                     clickedLabel = THREES;
-                    user2.Text = ((Score(THREES, keep) * 3)).ToString();
+                    scoreCard[2] = (Score(THREES, keep) * 3);
+                    user2.Text = (scoreCard[2]).ToString();
+                    uScoreCardCount++;
                     break;
                 case 3:
                     clickedLabel = FOURS;
-                    user3.Text = ((Score(FOURS, keep) * 4)).ToString();
+                    scoreCard[3] = (Score(FOURS, keep) * 4);
+                    user3.Text = (scoreCard[3]).ToString();
+                    uScoreCardCount++;
                     break;
                 case 4:
                     clickedLabel = FIVES;
-                    user4.Text = ((Score(FIVES, keep) * 5)).ToString();
+                    scoreCard[4] = (Score(FIVES, keep) * 5);
+                    user4.Text = (scoreCard[4]).ToString();
+                    uScoreCardCount++;
                     break;
                 case 5:
                     clickedLabel = SIXES;
-                    user5.Text = ((Score(SIXES, keep) * 6)).ToString();
+                    scoreCard[5] = (Score(SIXES, keep) * 6);
+                    user5.Text = (scoreCard[5]).ToString();
+                    uScoreCardCount++;
                     break;
                 case 6:
                     clickedLabel = THREE_OF_A_KIND;
+                    scoreCard[6] = ScoreThreeOfAKind(counts);
+                    user6.Text = (scoreCard[6].ToString());
+                    uScoreCardCount++;
                     break;
                 case 7:
                     clickedLabel = FOUR_OF_A_KIND;
+                    scoreCard[7] = ScoreFourOfAKind(counts);
+                    user7.Text = (scoreCard[7].ToString());
+                    uScoreCardCount++;
                     break;
                 case 8:
                     clickedLabel = FULL_HOUSE;
+                    scoreCard[8] = ScoreFullHouse(counts);
+                    user8.Text = (scoreCard[8].ToString());
+                    uScoreCardCount++;
                     break;
                 case 9:
                     clickedLabel = SMALL_STRAIGHT;
+                    scoreCard[9] = ScoreSmallStraight(counts);
+                    user9.Text = (scoreCard[9].ToString());
+                    uScoreCardCount++;
                     break;
                 case 10:
                     clickedLabel = LARGE_STRAIGHT;
+                    scoreCard[10] = ScoreLargeStraight(counts);
+                    user10.Text = (scoreCard[10].ToString());
+                    uScoreCardCount++;
                     break;
                 case 11:
                     clickedLabel = CHANCE;
-                    Score(clickedLabel, keep);
+                    scoreCard[11] = ScoreChance(counts);
+                    user11.Text = (scoreCard[11].ToString());
+                    uScoreCardCount++;
                     break;
                 case 12:
                     clickedLabel = YAHTZEE;
+                    scoreCard[12] = ScoreChance(counts);
+                    user12.Text = (scoreCard[12].ToString());
+                    uScoreCardCount++;
                     break;
             }
 
-            foreach(var l in new Label[] { user0, user1, user2, user3, user4, user5, user6, user7, user8, user9, user10, user11, user12})
+            // disable filled score card items and re-enable any empty ones
+            foreach (var l in new Label[] { user0, user1, user2, user3, user4, user5, user6, user7, user8, user9, user10, user11, user12 })
             {
                 l.Enabled = false;
             }
 
-            keep.Clear();
 
+            // clear the keep dice
+            // increment the number of elements in the score card that are full
+            // enable/disable buttons
             if (clicked.Text == "0")
             {
                 clicked.Enabled = true;
@@ -653,37 +893,55 @@ namespace Yahtzee
                     PictureBox die = GetKeepDie(i);
                     die.Enabled = false;
                 }
-            }
-            else if (clicked.Text != "0")
-            {
-                rollCount = 0;
-                dice.Clear();
-                for (int i = 0; i < keep.Count; i++)
+
+                //move keep to roll
+                for (int i = 0; i < keep.Capacity; i++)
                 {
-                    keep[i] = -1;
+                    dice[i] = keep[i];
+                    ShowAllRollDie();
+                }
+                keep.Clear();
+
+                for (int i = 0; i < 5; i++)
+                {
+                    keep.Add(-1);
+                    HideAllKeepDice();
                 }
                 rollButton.Enabled = true;
+                turnOver = false;
+            }
+            else
+            {
                 turnOver = true;
+                rollButton.Enabled = true;
             }
 
-            /*switch (clickedLabel) {
-                case:
-            }*/
-
-            // determine which element in the score card was clicked
-            // score that element
-            // put the score in the scorecard and the UI
-            // disable this element in the score card
-
-            // clear the keep dice
-            // reset the roll count
-            // increment the number of elements in the score card that are full
-            // enable/disable buttons
-
             // when it's the end of the game
-            // update the sum(s) and bonus parts of the score card
-            // enable/disable buttons
-            // display a message box?
+            if (uScoreCardCount == 12)
+            {
+                // update the sum(s) and bonus parts of the score card
+                int smallSum = 0;
+                int totalSum = 0;
+                for (int i = 0; i < 6; i++)
+                {
+                    smallSum = smallSum + scoreCard[i];
+                }
+                userSum.Text = smallSum.ToString();
+
+                if (smallSum >= 63)
+                {
+                    totalSum = totalSum + 35;
+                }
+
+                for (int i = 0; i < 12; i++)
+                {
+                    totalSum = totalSum + scoreCard[i];
+                }
+                userTotalScore.Text = totalSum.ToString();
+
+                MessageBox.Show("Game over!");
+            }
+
         }
 
         private void roll_DoubleClick(object sender, EventArgs e)
@@ -750,6 +1008,12 @@ namespace Yahtzee
             keep.Insert(3, -1);
             keep.Insert(4, -1);
             rollCount = 0;
+
+            foreach (var l in new Label[] { user0, user1, user2, user3, user4, user5, user6, user7, user8, user9, user10, user11, user12 })
+            {
+                l.Text= "";
+            }
+
             rollButton.Enabled = true;
 
         }
