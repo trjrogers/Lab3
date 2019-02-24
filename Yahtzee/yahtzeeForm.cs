@@ -36,21 +36,18 @@ namespace Yahtzee
         private const int CHANCE = 11;
         private const int YAHTZEE = 12;
 
+        // tracks how many rolls have happened on person's turn
         private int rollCount = 0;
+        // counts how many user score card items are full
         private int uScoreCardCount = 0;
-        private int value;
-
+        // array holds user's scores
         private int[] scoreCard = new int[13];
-
         // holds the number of dice need to be rolled when roll button is clicked
         private int numDie;
         // array that holds the count of each die value in player's "hand"
         private int[] counts = new int[5];
-        
-        private int howMany;
-        int whichValue;
         string EMPTY = "";
-
+        
         // random class constructor
         Random random = new Random();
         // holds boolean value of whether or not the player's turn has ended or if they can keep rolling
@@ -164,29 +161,18 @@ namespace Yahtzee
          */ 
         private bool HasCount(int howMany, int[] counts, out int whichValue)
         {
-            /*int index = ONES;
+
+            int index = ONES;
             foreach (int count in counts)
             {
                 if (howMany == count)
                 {
-                    whichValue = count;
+                    whichValue = index;
                     return true;
                 }
             }
             whichValue = NONE;
-            return false;*/
-
-            int j = 0;
-            for (int i = 0; i < counts.Length; i++)
-            {
-                if (counts[i] == howMany)
-                {
-                    j = i + 1;
-                }
-            }
-
-            whichValue = j;
-            return true;
+            return false;
         }
 
         /* This method returns the sum of the dice represented in the counts array.
@@ -224,6 +210,7 @@ namespace Yahtzee
             return score;
         }
 
+        // Calls has count to see if there are 4 of a type of die in keep
         private int ScoreFourOfAKind(int[] counts)
         {
             int score = 0;
@@ -237,11 +224,14 @@ namespace Yahtzee
             return score;
         }
 
+        // calls has count to see if there are 5 of a type of die in keep
         private int ScoreYahtzee(int[] counts)
         {
-            int score;
-            HasCount(5, counts, out int whichValue);
-            score = whichValue * 5;
+            int score = 0;
+            if (HasCount(5, counts, out int whichValue) == true)
+            {
+                score = score + 50;
+            }
             return score;
         }
 
@@ -250,16 +240,26 @@ namespace Yahtzee
          */ 
         private int ScoreFullHouse(int[] counts)
         {
-            if (HasCount(3, counts, out int whichValue) == true && HasCount(2, counts, out int whichValue2) == true)
+            if (HasCount(3, counts, out int whichValue) == true)
             {
-                return 25;
+                if (HasCount(2, counts, out int whichValue2) == true)
+                {
+                    return 25;
+                }
+                else
+                {
+                    return 0;
+                }
             }
             else
             {
                 return 0;
             }
+
         }
 
+        // there are 3 possible permutations of a small straight {(1234) (2345) (3456)}
+        // this method goes through counts in 3 loops starting at 1, 2, and 3 respectively and sees if the following indices have at least 1 count 
         private int ScoreSmallStraight(int[] counts)
         {
             bool small = false;
@@ -329,6 +329,8 @@ namespace Yahtzee
 
         }
 
+        // there are 2 possible permutations of a large straight {(12345) (23456)}
+        // this method goes through counts in 2 loops starting at 1 and 2 respectively and sees if the following indices have at least 1 count
         private int ScoreLargeStraight(int[] counts)
         {
             bool large = false;
@@ -460,17 +462,44 @@ namespace Yahtzee
         // a 0 or a positive number could be an actual score
         private void ResetScoreCard(int[] scoreCard, int scoreCardCount)
         {  
-
+            for (int i = 0; i < scoreCard.Length; i++)
+            {
+                scoreCard[i] = -1;
+            }
         }
 
         // this set has to do with user's scorecard UI
         private void ResetUserUIScoreCard()
         {
+            foreach (var l in new Label[] { user0, user1, user2, user3, user4, user5, user6, user7, user8, user9, user10, user11, user12 })
+            {
+                l.Text = "";
+            }
         }
 
         // this method adds the subtotals as well as the bonus points when the user is done playing
         public void UpdateUserUIScoreCard()
         {
+            // update the sum(s) and bonus parts of the score card
+            int smallSum = 0;
+            int totalSum = 0;
+            for (int i = 0; i < 6; i++)
+            {
+                smallSum = smallSum + scoreCard[i];
+            }
+            userSum.Text = smallSum.ToString();
+
+            if (smallSum >= 63)
+            {
+                totalSum = totalSum + 35;
+                userBonus.Text = 35.ToString();
+            }
+
+            for (int i = 0; i < 12; i++)
+            {
+                totalSum = totalSum + scoreCard[i];
+            }
+            userTotalScore.Text = totalSum.ToString();
         }
 
         /* When I move a die from roll to keep, I put a -1 in the spot that the die used to be in.
@@ -868,7 +897,7 @@ namespace Yahtzee
                     break;
                 case 12:
                     clickedLabel = YAHTZEE;
-                    scoreCard[12] = ScoreChance(counts);
+                    scoreCard[12] = ScoreYahtzee(counts);
                     user12.Text = (scoreCard[12].ToString());
                     uScoreCardCount++;
                     break;
@@ -888,6 +917,8 @@ namespace Yahtzee
             {
                 clicked.Enabled = true;
                 clicked.Text = "";
+                scoreCard[clickedLabel] = -1;
+                uScoreCardCount--;
                 for (int i = 0; i < keep.Count; i++)
                 {
                     PictureBox die = GetKeepDie(i);
@@ -909,6 +940,11 @@ namespace Yahtzee
                 }
                 rollButton.Enabled = true;
                 turnOver = false;
+
+                if (rollCount == 3)
+                {
+                    turnOver = true;
+                }
             }
             else
             {
@@ -917,28 +953,9 @@ namespace Yahtzee
             }
 
             // when it's the end of the game
-            if (uScoreCardCount == 12)
+            if (uScoreCardCount == 13)
             {
-                // update the sum(s) and bonus parts of the score card
-                int smallSum = 0;
-                int totalSum = 0;
-                for (int i = 0; i < 6; i++)
-                {
-                    smallSum = smallSum + scoreCard[i];
-                }
-                userSum.Text = smallSum.ToString();
-
-                if (smallSum >= 63)
-                {
-                    totalSum = totalSum + 35;
-                }
-
-                for (int i = 0; i < 12; i++)
-                {
-                    totalSum = totalSum + scoreCard[i];
-                }
-                userTotalScore.Text = totalSum.ToString();
-
+                UpdateUserUIScoreCard();
                 MessageBox.Show("Game over!");
             }
 
@@ -997,9 +1014,13 @@ namespace Yahtzee
 
         private void newGameButton_Click(object sender, EventArgs e)
         {
+            // Clears the UI
             HideAllComputerKeepDice();
             HideAllKeepDice();
             HideAllRollDice();
+            ResetUserUIScoreCard();
+
+            // Clears arrays and initializes keep to be full of -1s
             dice.Clear();
             keep.Clear();
             keep.Insert(0, -1);
@@ -1007,13 +1028,12 @@ namespace Yahtzee
             keep.Insert(2, -1);
             keep.Insert(3, -1);
             keep.Insert(4, -1);
+            ResetScoreCard(scoreCard, uScoreCardCount);
+
+            // Resets roll count
             rollCount = 0;
 
-            foreach (var l in new Label[] { user0, user1, user2, user3, user4, user5, user6, user7, user8, user9, user10, user11, user12 })
-            {
-                l.Text= "";
-            }
-
+            // Re-enables roll button
             rollButton.Enabled = true;
 
         }
